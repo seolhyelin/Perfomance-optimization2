@@ -1,35 +1,68 @@
-import React, { useState } from 'react'
-import styled from 'styled-components'
-import Header from './components/Header'
-import InfoTable from './components/InfoTable'
-import SurveyChart from './components/SurveyChart'
-import Footer from './components/Footer'
-import ImageModal from './components/ImageModal'
+import React, { useState, useEffect, Suspense, lazy } from "react";
+import styled from "styled-components";
+import Header from "./components/Header";
+import InfoTable from "./components/InfoTable";
+import SurveyChart from "./components/SurveyChart";
+import Footer from "./components/Footer";
+// import ImageModal from "./components/ImageModal";
+
+function lazyWithPreload(importFunction) {
+  const Component = lazy(importFunction);
+  Component.preload = importFunction;
+  return Component;
+}
+
+const LazyImageModal = lazyWithPreload(() => import("./components/ImageModal"));
 
 function App() {
-    const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal] = useState(false);
 
-    return (
-        <div className="App">
-            <Header />
-            <InfoTable />
-            <ButtonModal onClick={() => { setShowModal(true) }}>올림픽 사진 보기</ButtonModal>
-            <SurveyChart />
-            <Footer />
-            {showModal ? <ImageModal closeModal={() => { setShowModal(false) }} /> : null}
-        </div>
-    )
+  // 렌더링이 끝났을때 미리
+  useEffect(() => {
+    LazyImageModal.preload();
+  }, []);
+
+  // 마우스가 버튼 위에 올라갔을때 미리
+  const handleMouseEnter = () => {
+    return import("./components/ImageModal");
+  };
+
+  return (
+    <div className="App">
+      <Header />
+      <InfoTable />
+      <ButtonModal
+        onClick={() => {
+          setShowModal(true);
+        }}
+        // onMouseEnter={handleMouseEnter}
+      >
+        올림픽 사진 보기
+      </ButtonModal>
+      <SurveyChart />
+      <Footer />
+      <Suspense fallback={null}>
+        {showModal ? (
+          <LazyImageModal
+            closeModal={() => {
+              setShowModal(false);
+            }}
+          />
+        ) : null}
+      </Suspense>
+    </div>
+  );
 }
 
 const ButtonModal = styled.button`
-    border-radius: 30px;
-    border: 1px solid #999;
-    padding: 12px 30px;
-    background: none;
-    font-size: 1.1em;
-    color: #555;
-    outline: none;
-    cursor: pointer;
-`
+  border-radius: 30px;
+  border: 1px solid #999;
+  padding: 12px 30px;
+  background: none;
+  font-size: 1.1em;
+  color: #555;
+  outline: none;
+  cursor: pointer;
+`;
 
-export default App
+export default App;
